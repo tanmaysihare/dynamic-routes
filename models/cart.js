@@ -32,4 +32,11 @@ module.exports = class Cart {
           
         })
     }
+    static deleteProduct(id,productPrice){
+        fs.readFile(p,(err,fileContent)=>{
+            if(err){
+                return;
+            }
+        })
+    }
 }

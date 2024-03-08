@@ -1,24 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-
-const p = path.join(
-  path.dirname(process.mainModule.filename),
-  'data',
-  'products.json'
-);
-
-const getProductsFromFile = cb => {
-  fs.readFile(p, (err, fileContent) => {
-    if (err) {
-      cb([]);
-    } else {
-      cb(JSON.parse(fileContent));
-    }
-  });
-};
+const db = require("../util/database");
+const Cart = require("./cart");
 
 module.exports = class Product {
-  constructor(id,title, imageUrl, description, price) {
+  constructor( id,title, imageUrl, description, price) {
     this.id = id;
     this.title = title;
     this.imageUrl = imageUrl;
@@ -27,42 +11,29 @@ module.exports = class Product {
   }
 
   save() {
-    getProductsFromFile(products => {
-    if(this.id){
-      const existingProductIndex = products.findIndex(prod => prod.id === this.id);
-      const updatedProduct = [...products];
-      updatedProduct[existingProductIndex] = this;
-      fs.writeFile(p, JSON.stringify(updatedProducts), err => {
-        console.log(err);
-        });
-    }else{
-        this.id = Math.random().toString();
-    products.push(this);
-    fs.writeFile(p, JSON.stringify(products), err => {
-     console.log(err);
-     });
+    // Check if any required property is undefined
+    if (!this.title || !this.price || !this.imageUrl || !this.description) {
+        // Return a rejected promise with an error message
+        return Promise.reject(new Error('One or more required properties are undefined',
+        console.log('title--',this.title),
+        console.log('price--',this.price),
+        console.log('imageUrl--',this.imageUrl),
+        console.log('description--',this.description)
+         ) );
     }
-  
-    });
-  }
-static deleteById(id){
-  getProductsFromFile(products =>{
-   const updatedProducts = products.filter(prod => prod.id !== id);
-    fs.writeFile(p,JSON.stringify(updatedProducts),err=>{
-      if(!err){
 
-      }
-    })
-  })
+    return db.execute(
+        'INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)',
+        [this.title, this.price, this.imageUrl, this.description]
+    );
 }
-  static fetchAll(cb) {
-    getProductsFromFile(cb);
+
+  static deleteById(id) {}
+  static fetchAll() {
+    return db.execute("SELECT * FROM products");
   }
 
-static findById(id,cb){
-getProductsFromFile(products => {
-const product = products.find(p => p.id === id);
-cb(product);
-})
-}
-}
+  static findById(id) {
+    return db.execute('SELECT * FROM products WHERE products.id = ?',[id]);
+  }
+};
